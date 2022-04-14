@@ -1,0 +1,16 @@
+{
+    "DataProcess": {
+        "N_SPLITS": 4,
+        "IMG_HEIGHT": 512,
+        "IMG_WIDTH": 512
+    },
+
+    "TrainCycle":{
+        "BATCH_SIZE": 12,
+        "PATIENCE": 20,
+        "EPOCHS": 100,
+        "INIT_LR": 1e-4,
+        "MAX_LR": 1e-3
+    }
+
+}
