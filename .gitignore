@@ -1,2 +1,7 @@
 ## folder
-data/
+input/
+output/
+conf/
+
+## file
+sorghum-id-fgvc-9.ipynb
