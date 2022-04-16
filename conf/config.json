@@ -7,10 +7,9 @@
 
     "TrainCycle":{
         "BATCH_SIZE": 16,
-        "PATIENCE": 20,
-        "EPOCHS": 100,
-        "INIT_LR": 1e-4,
-        "MAX_LR": 1e-3
+        "EPOCHS": 40,
+        "MAX_LR": 1e-3,
+        "MIN_LR": 1e-5
     }
 
 }
