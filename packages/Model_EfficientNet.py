@@ -2,8 +2,8 @@ import tensorflow as tf
 tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
 def get_model(input_shape, output_shape):
-    base_model = tf.keras.applications.efficientnet.EfficientNetB0(input_shape=input_shape,
-                                                                   include_top=False)
+    base_model = tf.keras.applications.efficientnet_v2.EfficientNetV2B0(input_shape=input_shape,
+                                                                        include_top=False)
     inputs = tf.keras.Input(shape=input_shape)
     # Transfer Learning
     x = base_model(inputs)
