@@ -3,27 +3,28 @@ import tensorflow as tf
 import albumentations as album
 
 class dataAugmentation:
-    def __init__(self):
+    def __init__(self, ):
+
         self.transforms = album.Compose([
             album.Flip(p=0.5),
-            # album.Rotate(border_mode=cv2.BORDER_CONSTANT, p=0.5),
+            album.Rotate(border_mode=cv2.BORDER_CONSTANT, p=0.5),
             album.HueSaturationValue(p=0.5),
             album.OneOf([
                 album.RandomBrightnessContrast(p=0.5),
                 album.RandomGamma(p=0.5),
                 ], p=0.5),
-            # album.OneOf([
-            #     album.Blur(p=0.1),
-            #     album.GaussianBlur(p=0.1),
-            #     album.MotionBlur(p=0.1),
-            #     ], p=0.1),
-            # album.OneOf([
-            #     album.GaussNoise(p=0.1),
-            #     album.ISONoise(p=0.1),
-            #     album.GridDropout(ratio=0.5, p=0.2),
-            #     album.CoarseDropout(max_holes=16, max_height=16, max_width=16,
-            #                         min_holes= 8, min_height= 8, min_width= 8, p=0.2)
-            #     ], p=0.2),
+            album.OneOf([
+                album.Blur(p=0.1),
+                album.GaussianBlur(p=0.1),
+                album.MotionBlur(p=0.1),
+                ], p=0.1),
+            album.OneOf([
+                album.GaussNoise(p=0.1),
+                album.ISONoise(p=0.1),
+                album.GridDropout(ratio=0.5, p=0.2),
+                album.CoarseDropout(max_holes=16, max_height=16, max_width=16,
+                                    min_holes= 8, min_height= 8, min_width= 8, p=0.2)
+                ], p=0.2),
             ])
 
     def aug_fn(self, image):
