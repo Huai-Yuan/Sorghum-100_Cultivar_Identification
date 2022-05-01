@@ -21,10 +21,6 @@ class tfrecords:
     def __init__(self, IMG_HEIGHT, IMG_WIDTH):
         self.IMG_HEIGHT = IMG_HEIGHT
         self.IMG_WIDTH = IMG_WIDTH
-        self.image_feature_description = {
-            'label': tf.io.FixedLenFeature([], tf.int64),
-            'image_raw': tf.io.FixedLenFeature([], tf.string),
-        }
 
     def _bytes_feature(self, value):
         """Returns a bytes_list from a string / byte."""
@@ -40,10 +36,22 @@ class tfrecords:
         image = tf.io.decode_png(image_string)
         image = tf.image.resize(image, size=[self.IMG_HEIGHT, self.IMG_WIDTH])
         image = tf.cast(image, 'uint8')
-        image = tf.io.encode_jpeg(image)
+        image = tf.io.encode_png(image)
 
         feature = {
             'label': self._int64_feature(label),
+            'image_raw': self._bytes_feature(image),
+        }
+
+        return tf.train.Example(features=tf.train.Features(feature=feature))
+
+    def image_example_test(self, image_string):
+        image = tf.io.decode_png(image_string)
+        image = tf.image.resize(image, size=[self.IMG_HEIGHT, self.IMG_WIDTH])
+        image = tf.cast(image, 'uint8')
+        image = tf.io.encode_png(image)
+
+        feature = {
             'image_raw': self._bytes_feature(image),
         }
 
@@ -53,22 +61,49 @@ class tfrecords:
         for ds_split in ds_splits:
             record_file = f"{path}/{ds_split}.tfrecords"
             subset = ds_splits[ds_split]
-            filenames, labels = subset
-            with tf.io.TFRecordWriter(record_file) as writer:
-                for filename, label in tqdm(list(zip(filenames, labels))):
-                    image_string = open(filename, 'rb').read()
-                    tf_example = self.image_example(image_string, label)
-                    writer.write(tf_example.SerializeToString())
+            if ds_split == "test":
+                filenames = subset
+                with tf.io.TFRecordWriter(record_file) as writer:
+                    for filename in tqdm(filenames):
+                        image_string = open(filename, 'rb').read()
+                        tf_example = self.image_example_test(image_string)
+                        writer.write(tf_example.SerializeToString())
+
+            else:
+                filenames, labels = subset
+                with tf.io.TFRecordWriter(record_file) as writer:
+                    for filename, label in tqdm(list(zip(filenames, labels))):
+                        image_string = open(filename, 'rb').read()
+                        tf_example = self.image_example(image_string, label)
+                        writer.write(tf_example.SerializeToString())
 
     def _parse_image_function(self, example_proto):
-        example_message = tf.io.parse_single_example(example_proto, self.image_feature_description)
+        image_feature_description = {
+            'label': tf.io.FixedLenFeature([], tf.int64),
+            'image_raw': tf.io.FixedLenFeature([], tf.string),
+        }
+
+        example_message = tf.io.parse_single_example(example_proto, image_feature_description)
 
         img_raw = example_message['image_raw']
         label = example_message['label']
         
-        image = tf.io.decode_jpeg(img_raw, channels=3)
+        image = tf.io.decode_png(img_raw, channels=3)
         image = tf.reshape(image, shape=[self.IMG_HEIGHT, self.IMG_WIDTH, 3])
         return (image, label)
+
+    def _parse_image_function_test(self, example_proto):
+        image_feature_description = {
+            'image_raw': tf.io.FixedLenFeature([], tf.string),
+        }
+
+        example_message = tf.io.parse_single_example(example_proto, image_feature_description)
+
+        img_raw = example_message['image_raw']
+        
+        image = tf.io.decode_png(img_raw, channels=3)
+        image = tf.reshape(image, shape=[self.IMG_HEIGHT, self.IMG_WIDTH, 3])
+        return image
 
     def get_dataset(self, filename):
         options = tf.data.Options()
@@ -77,4 +112,12 @@ class tfrecords:
         dataset = dataset.with_options(options)  
 
         dataset = dataset.map(self._parse_image_function, num_parallel_calls=tf.data.AUTOTUNE)
+        return dataset
+
+    def get_test_dataset(self, filename, mode=None):
+        options = tf.data.Options()
+        options.deterministic = False
+        dataset = tf.data.TFRecordDataset(filename)  
+        dataset = dataset.with_options(options)  
+        dataset = dataset.map(self._parse_image_function_test, num_parallel_calls=tf.data.AUTOTUNE)
         return dataset
